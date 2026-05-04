@@ -3,6 +3,19 @@ package curvemorph;
 public class CurveMorpher
 {
 
+	public static double[][] getInterpolatedState(PolylineState start, PolylineState end, double t)
+	{
+		double[][] out = new double [2][start.nPointsN];
+		for (int i = 0; i < start.nPointsN; i++) 
+		{
+			for(int d = 0; d < 2; d ++)
+			{
+				out[d][i] = lerp(start.points[d][i], end.points[d][i], t);
+			}
+		}	
+		
+		return out;
+	}
 	public static double[][] getMorphState(PolylineState start, PolylineState end, double t, boolean bUseCentroid)
 	{
 		

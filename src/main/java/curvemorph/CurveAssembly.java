@@ -60,7 +60,15 @@ public class CurveAssembly
 			for(int nFrame = nIniSegmFrame + 1; nFrame < nLastSegmFrame; nFrame ++)
 			{
 				t = (nFrame - nIniSegmFrame) / dSegmRange;
-				final double[][] xyMorph = CurveMorpher.getMorphState(start, end, t, bUseCentroid);
+				final double[][] xyMorph;
+				if(dial.nAlgorithm == 0)
+				{
+					xyMorph = CurveMorpher.getMorphState(start, end, t, bUseCentroid);
+				}
+				else
+				{
+					xyMorph = CurveMorpher.getInterpolatedState( start, end, t );
+				}
 				final CurveLerp morphLerp = new CurveLerp(xyMorph);
 				final int nSegm = (int) Math.ceil(morphLerp.dOrigLength);
 				final float [][] xyMorphResampled = morphLerp.resampleFloat( nSegm );
