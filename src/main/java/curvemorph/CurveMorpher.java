@@ -21,7 +21,7 @@ public class CurveMorpher
 		
 		double[][] out = new double [2][start.nPointsN];
 		
-		double currentAngle = lerp(start.initialAngle, end.initialAngle, t);
+		double currentAngle = interpolateAngle(start.initialAngle, end.initialAngle, t);
 		
 		for(int d = 0; d < 2; d++)
 		{
@@ -41,7 +41,7 @@ public class CurveMorpher
 	        // Update angle for next segment using internal turning angle
 	        if (i < start.nPointsN - 2) 
 	        {
-	            currentAngle += lerp(start.angles[i], end.angles[i], t);
+	            currentAngle += interpolateAngle(start.angles[i], end.angles[i], t);
 	        }
 	    }
 		if(bUseCentroid)
@@ -81,5 +81,18 @@ public class CurveMorpher
 	public static double lerp(double a, double b, double t)
 	{
 		return a + (b - a) * t;
+	}
+	
+	public static double interpolateAngle(double startAngle, double endAngle, double t) {
+	    // 1. Get the raw difference
+	    double delta = endAngle - startAngle;
+
+	    // 2. Normalize difference to [-PI, PI]
+	    // This finds the shortest way around the circle
+	    while (delta <= -Math.PI) delta += 2 * Math.PI;
+	    while (delta > Math.PI)  delta -= 2 * Math.PI;
+
+	    // 3. Interpolate from the start by the shortest delta
+	    return startAngle + (delta * t);
 	}
 }

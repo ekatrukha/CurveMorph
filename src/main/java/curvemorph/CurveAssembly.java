@@ -13,6 +13,8 @@ public class CurveAssembly
 	
 	final CMDialog dial;
 	
+	public static final int EndsMap_Closest = 0, EndsMap_First = 1, EndsMap_End = 2; 
+	
 	int nFirstP; 
 	
 	int nLastP;
@@ -41,7 +43,7 @@ public class CurveAssembly
 		for(int nRoi = 0; nRoi < curveRefs.size() - 1; nRoi++)
 		{
 			//add first ROI in the segment
-			addRoi( curveRefs.get( nRoi ) , frameRefs.get( nRoi ), curveRefs.get( nRoi ).getStrokeWidth()  );
+			addRoi( curveRefs.get( nRoi ), frameRefs.get( nRoi ), curveRefs.get( nRoi ).getStrokeWidth()  );
 			
 			int nIniSegmFrame = frameRefs.get( nRoi );
 			int nLastSegmFrame = frameRefs.get( nRoi + 1 );
@@ -50,8 +52,8 @@ public class CurveAssembly
 			double fStrokeIni =  curveRefs.get( nRoi ).getStrokeWidth();
 			double fStrokeLast =  curveRefs.get( nRoi + 1 ).getStrokeWidth();
 			boolean bUseCentroid = false;
-			if(dial.nMorphType == 0)
-				bUseCentroid = true;
+			if(dial.nAlgorithm == 0)
+				bUseCentroid = dial.bUseCentriod;
 			final CurveLerp startI = CurveLerp.fromROI(curveRefs.get( nRoi ));
 			final CurveLerp endI = CurveLerp.fromROI(curveRefs.get( nRoi + 1 ));
 			
@@ -81,7 +83,7 @@ public class CurveAssembly
 		}
 		
 		//add last ROI
-		final Roi lastRoi = curveRefs.get( curveRefs.size() -1 );
+		final Roi lastRoi = curveRefs.get( curveRefs.size() - 1 );
 		addRoi(lastRoi, frameRefs.get( frameRefs.size() - 1 ), lastRoi.getStrokeWidth());
 		
 		
@@ -104,13 +106,20 @@ public class CurveAssembly
 	void addRoi(final Roi roi, final int nFrame, final double dStrokeWidth)
 	{
 		roi.setStrokeWidth( dStrokeWidth );
-		if(cm.bROIsAlongZ)
+		if(cm.bHasHyperstackPos)
 		{
-			roi.setPosition( 1, nFrame, 1 );
+			if(cm.bROIsAlongZ)
+			{
+				roi.setPosition( 1, nFrame, 1 );
+			}
+			else
+			{
+				roi.setPosition( 1, 1, nFrame );
+			}
 		}
 		else
 		{
-			roi.setPosition( 1, 1, nFrame );
+			roi.setPosition( nFrame );
 		}
 		if(dial.bAddToOverlay)
 		{
@@ -132,11 +141,12 @@ public class CurveAssembly
 	{
 		int [] nOrientation = new int [2];
 		
-		if(dial.nMorphType == 2)
+		if(dial.nEndsMap == EndsMap_First)
 		{
 			return nOrientation;
 		}
-		if(dial.nMorphType == 3)
+		
+		if(dial.nEndsMap == EndsMap_End)
 		{
 			nOrientation[0]  =  1;
 			nOrientation[1]  =  1;
@@ -144,8 +154,8 @@ public class CurveAssembly
 		}
 		double dDistance = Double.MAX_VALUE;
 		double dCurrDistance;
-		int nStartLast = start.origXY[0].length-1;
-		int nEndLast   = end.origXY[0].length-1;
+		int nStartLast = start.origXY[0].length - 1;
+		int nEndLast   =   end.origXY[0].length - 1;
 
 		//begin-begin
 		dCurrDistance = CurveLerp.distance( start.origXY[0][0], end.origXY[0][0], 
@@ -211,13 +221,20 @@ public class CurveAssembly
 			curveRefs = new ArrayList<>();
 			nFirstP = 1;
 
-			if(cm.bROIsAlongZ)
+			if(cm.bHasHyperstackPos)
 			{
-				nLastP = cm.dims[3];
+				if(cm.bROIsAlongZ)
+				{
+					nLastP = cm.dims[3];
+				}
+				else
+				{
+					nLastP = cm.dims[4];
+				}
 			}
 			else
 			{
-				nLastP = cm.dims[4];
+				nLastP = cm.nStackSize;
 			}
 			if(nLastP != nLastROIFrame)
 				bAddLastROI = true;
@@ -238,8 +255,7 @@ public class CurveAssembly
 			curveRefs.add( cm.curveROIs.get(cm.curveROIs.size() - 1) );
 		}
 		ArrayList<CurveLerp> iniCurves = new ArrayList<>();
-		
-		
+			
 		for(int i = 0; i < curveRefs.size(); i++)
 		{
 			final Roi roi = curveRefs.get( i );

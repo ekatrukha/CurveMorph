@@ -27,6 +27,9 @@ public class CurveMorph implements PlugIn
 	/** image dimensions **/
 	int [] dims;
 	
+	/** image slices, in case not hyperstack **/
+	int nStackSize;
+	
 	/** ROI manager instance **/
 	RoiManager rm;
 
@@ -35,6 +38,9 @@ public class CurveMorph implements PlugIn
 	
 	/** if we work along T **/
 	boolean bROIsAlongT = false;
+	
+	/** if no HyperStack position was selected **/
+	boolean bHasHyperstackPos = true;
 	
 	public ArrayList<Roi> curveROIs;
 	
@@ -106,23 +112,36 @@ public class CurveMorph implements PlugIn
 				candidateROIs.add( roi );
 				nLineRois++;
 			}
-			if(roi.getZPosition() > 1)
+			if(!roi.hasHyperStackPosition())
 			{
-				bROIsAlongZ = true;
-				if(roi.getTPosition() > dims[3])
+				bHasHyperstackPos = false;
+				nStackSize = imp.getStackSize();
+				if(roi.getPosition() > nStackSize )
 				{
-					IJ.error( "CurveMorph error", "ROI " + roi.getName() + " Z-slice position is larger than total number of slices." );
+					IJ.error( "CurveMorph error", "ROI " + roi.getName() + " position is larger than total number of slices." );
 					return false;
 				}
-
 			}
-			if(roi.getTPosition() > 1)
+			else
 			{
-				bROIsAlongT = true;
-				if(roi.getTPosition() > dims[4])
+				if(roi.getZPosition() > 1)
 				{
-					IJ.error( "CurveMorph error", "ROI " + roi.getName() + " timepoint position is larger than total number of frames." );
-					return false;
+					bROIsAlongZ = true;
+					if(roi.getZPosition() > dims[3])
+					{
+						IJ.error( "CurveMorph error", "ROI " + roi.getName() + " Z-slice position is larger than total number of slices." );
+						return false;
+					}
+	
+				}
+				if(roi.getTPosition() > 1)
+				{
+					bROIsAlongT = true;
+					if(roi.getTPosition() > dims[4])
+					{
+						IJ.error( "CurveMorph error", "ROI " + roi.getName() + " timepoint position is larger than total number of frames." );
+						return false;
+					}
 				}
 			}
 
@@ -133,15 +152,18 @@ public class CurveMorph implements PlugIn
 			IJ.error( "CurveMorph error", "The plugin requires at least two line/curve ROIs in ROI manager." );
 			return false;
 		}
-		if(bROIsAlongZ && bROIsAlongT)
+		if(bHasHyperstackPos)
 		{
-			IJ.error( "CurveMorph error", "Provided ROIs can only change either in Z or T position, not both." );
-			return false;
-		}
-		if(!bROIsAlongZ && !bROIsAlongT)
-		{
-			IJ.error( "CurveMorph error", "You need to provide multiple ROIs at either different slices or different frames only." );	
-			return false;
+			if(bROIsAlongZ && bROIsAlongT)
+			{
+				IJ.error( "CurveMorph error", "Provided ROIs can only change either in Z or T position, not both." );
+				return false;
+			}
+			if(!bROIsAlongZ && !bROIsAlongT)
+			{
+				IJ.error( "CurveMorph error", "You need to provide multiple ROIs at either different slices or different frames only." );	
+				return false;
+			}
 		}
 		//check if all ROIs have unique position
 		Set<Integer> uniquePositions = new HashSet<>();
@@ -151,15 +173,23 @@ public class CurveMorph implements PlugIn
 		{
 			//roi index
 			indexedROIs[nCount][0] = nCount;
-			if(bROIsAlongT)
+			if(bHasHyperstackPos)
 			{
-				uniquePositions.add( roi.getTPosition());
-				indexedROIs[nCount][1] = roi.getTPosition();
+				if(bROIsAlongT)
+				{
+					uniquePositions.add( roi.getTPosition());
+					indexedROIs[nCount][1] = roi.getTPosition();
+				}
+				else
+				{
+					uniquePositions.add( roi.getZPosition());
+					indexedROIs[nCount][1] = roi.getZPosition();
+				}
 			}
 			else
 			{
-				uniquePositions.add( roi.getZPosition());
-				indexedROIs[nCount][1] = roi.getZPosition();
+				uniquePositions.add( roi.getPosition());
+				indexedROIs[nCount][1] = roi.getPosition();				
 			}
 			nCount++;
 		}
@@ -194,16 +224,20 @@ public class CurveMorph implements PlugIn
 	{
 		new ImageJ();
 	
+		ImagePlus image = IJ.openImage("/home/eugene/Desktop/people/Varsha/20250131_bendingMT/Average_20240510.tif");
+
 		//ImagePlus image = IJ.openImage("/home/eugene/Desktop/people/Christophe/Untitled.tif");
-		ImagePlus image = IJ.openImage("/home/eugene/Desktop/people/Christophe/ExM_MT.tif");
+		//ImagePlus image = IJ.openImage("/home/eugene/Desktop/people/Christophe/ends/Untitled.tif");
+		//ImagePlus image = IJ.openImage("/home/eugene/Desktop/people/Christophe/ExM_MT.tif");
 		image.show();
 		RoiManager rMan = RoiManager.getInstance2();
 		if (rMan == null) {
 			rMan = new RoiManager(); // creates a new one if needed
 		}
 
+		rMan.open( "/home/eugene/Desktop/people/Varsha/20250131_bendingMT/averRoiSet3.zip" );
 		//rMan.open( "/home/eugene/Desktop/people/Christophe/RoiSet3.zip" );
-		rMan.open( "/home/eugene/Desktop/people/Christophe/RoiSet_MT.zip" );
+		//rMan.open( "/home/eugene/Desktop/people/Christophe/RoiSet_MT.zip" );
 		// run the plugin
 		IJ.runPlugIn(CurveMorph.class.getName(), "");
 
@@ -228,7 +262,7 @@ public class CurveMorph implements PlugIn
 		for (int k = 0; k < 2; k++)
 		{
 			final Roi roi = rMan.getRoi( k );
-			final FloatPolygon poly = roi.getFloatPolygon();
+			final FloatPolygon poly = ((PolygonRoi) roi).getFloatPolygon();
 			double [][] xy = new double[2][poly.npoints];
 
 			for(int i = 0; i < poly.npoints; i++)

@@ -14,8 +14,11 @@ public class CMDialog implements DialogListener
 	/**  0 - morphing; 1 - xy interpolation**/
 	public int nAlgorithm = (int)Prefs.get( "CurveMorph.nAlgorithm", 0 );
 	
-	/** in case of morph algorithm, 0 - centroid, 1 - closest end point, 2 - start always first, 3 - end always first **/
-	public int nMorphType = (int)Prefs.get( "CurveMorph.nMorphType", 0 );
+	/** ends mapping, 0 - closest end point, 1 - start always first, 2 - end always first **/
+	public int nEndsMap = (int)Prefs.get( "CurveMorph.nEndsMap", 0 );
+	
+	/** ends mapping, 0 - closest end point, 1 - start always first, 2 - end always first **/
+	public boolean bUseCentriod = Prefs.get( "CurveMorph.bUseCentriod", false );
 	
 	/** range of morphing 0 - image defined, 1 - ROIs defined**/
 	public int nRange = (int)Prefs.get( "CurveMorph.nRange", 0 );
@@ -36,7 +39,8 @@ public class CMDialog implements DialogListener
 	public int nKymoAlign = (int)Prefs.get( "CurveMorph.nKymoAlign", 0 );
 	
 	Choice chAlgo;
-	Choice chMorphMethod;
+	Choice chEndsMap;
+	Checkbox cUseCentriod;
 	Checkbox cMakeKymograph;
 	Choice chKymoType;
 	Choice chKymoAlign;
@@ -47,28 +51,41 @@ public class CMDialog implements DialogListener
 	{
 		gdParams = new GenericDialog( "CurveMorph parameters" );
 		final String [] sAlgorithm = new String[] {"Shape morphing", "XY interpolation"};
-		final String [] sMorphType = new String[] {"Centroid", "Closest end point", "First ends", "Last ends"};
+		final String [] sEndsMap = new String[] {"Closest", "Always first", "Always last"};
 		final String [] sRange = new String[] {"All image span", "Defined by ROIs"};
 		final String [] sKymoType = new String[] {"Maximum", "Average"};
 		final String [] sKymoAlign = new String[] {"Center", "Start point", "End point"};
-		gdParams.addChoice( "Algorithm", sAlgorithm,  null);
-		chAlgo = ((Choice)gdParams.getChoices().get( 0 ));
-		chAlgo.select( nAlgorithm );
-		gdParams.addChoice( "Morph type", sMorphType,  null);
-		chMorphMethod = ((Choice)gdParams.getChoices().get( 1 ));
-		chMorphMethod.select( nMorphType );
-		gdParams.addChoice( "Range", sRange,  null);
-		((Choice)gdParams.getChoices().get( 2 )).select( nRange );
 		
+		int nChoiceN = 0;
+		int nCheckboxN = 0;
+		gdParams.addChoice( "Algorithm", sAlgorithm,  null);
+		chAlgo = ((Choice)gdParams.getChoices().get( nChoiceN ));
+		nChoiceN++;
+		chAlgo.select( nAlgorithm );
+		gdParams.addChoice( "Ends mapping", sEndsMap,  null);
+		chEndsMap = ((Choice)gdParams.getChoices().get( nChoiceN ));
+		nChoiceN++;
+		chEndsMap.select( nEndsMap );
+		gdParams.addCheckbox( "Use centriod", bUseCentriod );
+		cUseCentriod = ( Checkbox ) gdParams.getCheckboxes().get( nCheckboxN  );
+		nCheckboxN ++;
+		gdParams.addChoice( "Range", sRange,  null);
+		((Choice)gdParams.getChoices().get( nChoiceN )).select( nRange );
+		nChoiceN++;
 		gdParams.addCheckbox( "Add to overlay", bAddToOverlay );
+		nCheckboxN ++;
 		gdParams.addCheckbox( "Add to ROI Manager", bAddToManager );
+		nCheckboxN ++;
 		gdParams.addCheckbox( "Make kymograph", bMakeKymograph );
-		cMakeKymograph = ( Checkbox ) gdParams.getCheckboxes().get( 2 );
+		cMakeKymograph = ( Checkbox ) gdParams.getCheckboxes().get( nCheckboxN  );
+		nCheckboxN ++;
 		gdParams.addChoice( "Kymo transverse intensity", sKymoType,  null);
-		chKymoType = ((Choice)gdParams.getChoices().get( 3 ));
+		chKymoType = ((Choice)gdParams.getChoices().get( nChoiceN ));
+		nChoiceN++;
 		chKymoType.select( nKymoType );
 		gdParams.addChoice( "Kymo align", sKymoAlign,  null);
-		chKymoAlign = ((Choice)gdParams.getChoices().get( 4 ));
+		chKymoAlign = ((Choice)gdParams.getChoices().get( nChoiceN ));
+		nChoiceN++;
 		chKymoAlign.select( nKymoAlign );
 		
 		gdParams.addDialogListener( this );
@@ -85,11 +102,19 @@ public class CMDialog implements DialogListener
 	{
 		if(chAlgo.getSelectedIndex() == 0)
 		{
-			chMorphMethod.setEnabled( true );
+			cUseCentriod.setEnabled( true );
 		}
 		else
 		{
-			chMorphMethod.setEnabled( false );
+			cUseCentriod.setEnabled( false );
+		}
+		chEndsMap.setEnabled( true );
+		if(cUseCentriod.isEnabled())
+		{
+			if(cUseCentriod.getState())
+			{
+				chEndsMap.setEnabled( false );
+			}
 		}
 		if(cMakeKymograph.getState())
 		{
@@ -122,16 +147,11 @@ public class CMDialog implements DialogListener
 		nAlgorithm = gdParams.getNextChoiceIndex();
 		Prefs.set( "CurveMorph.nAlgorithm", (double) nAlgorithm );
 		
-		if(nAlgorithm == 0)
-		{
-			nMorphType = gdParams.getNextChoiceIndex();
-			Prefs.set( "CurveMorph.nMorphType", (double) nMorphType );
-		}
-		else
-		{
-			gdParams.getNextChoiceIndex();
-		}
-		
+		nEndsMap = gdParams.getNextChoiceIndex();
+		Prefs.set( "CurveMorph.nEndsMap", (double) nEndsMap );
+
+		bUseCentriod = gdParams.getNextBoolean();
+		Prefs.set( "CurveMorph.bUseCentriod", bUseCentriod );
 		
 		nRange = gdParams.getNextChoiceIndex();
 		Prefs.set( "CurveMorph.nRange", (double) nRange );

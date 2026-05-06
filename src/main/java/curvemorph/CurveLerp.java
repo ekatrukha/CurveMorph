@@ -1,5 +1,7 @@
 package curvemorph;
 
+import ij.gui.Line;
+import ij.gui.PolygonRoi;
 import ij.gui.Roi;
 import ij.process.FloatPolygon;
 
@@ -29,16 +31,25 @@ public class CurveLerp
 	
 	public static CurveLerp fromROI(final Roi roi)
 	{
-		final FloatPolygon poly = roi.getFloatPolygon();
-		double [][] xy = new double[2][poly.npoints];
+		if(roi.getType() == Roi.LINE)
+		{
+			final double [][] xy = new double[2][2];
+			xy[0][0] = ((Line)roi).x1d;
+			xy[1][0] = ((Line)roi).y1d;
+			xy[0][1] = ((Line)roi).x2d;
+			xy[1][1] = ((Line)roi).y2d;
+			return new CurveLerp(xy);
+		}
+		//polyline or freeline
+		final FloatPolygon poly = ((PolygonRoi)roi).getFloatPolygon();
+		final double [][] xy = new double[2][poly.npoints];
 
 		for(int i = 0; i < poly.npoints; i++)
 		{
 			xy[0][i] = poly.xpoints[i];
 			xy[1][i] = poly.ypoints[i];
-
 		}
-		return new CurveLerp(xy);
+		return new CurveLerp(xy);			
 	}
 	public int getPointsN()
 	{
