@@ -51,6 +51,7 @@ public class CurveMorph implements PlugIn
 	@Override
 	public void run( String arg )
 	{
+		IJ.register( CurveMorph.class );
 		//check the inputs
 		if(!verifyInitialInput())
 			return;
@@ -60,6 +61,11 @@ public class CurveMorph implements PlugIn
 			return;
 		final CurveAssembly curveAssembly = new CurveAssembly(this, cmDialog);
 		curveAssembly.runAssembly();
+		if(cmDialog.bMakeKymograph)
+		{
+			final CMKymoBuilder<?> kymoBuilder = new CMKymoBuilder<>(this, curveAssembly);
+			kymoBuilder.getKymograph();
+		}
 	}
 	
 	/** function that checks for input image and ROIs presence **/
@@ -112,6 +118,7 @@ public class CurveMorph implements PlugIn
 				candidateROIs.add( roi );
 				nLineRois++;
 			}
+			
 			if(!roi.hasHyperStackPosition())
 			{
 				bHasHyperstackPos = false;
@@ -152,6 +159,7 @@ public class CurveMorph implements PlugIn
 			IJ.error( "CurveMorph error", "The plugin requires at least two line/curve ROIs in ROI manager." );
 			return false;
 		}
+		
 		if(bHasHyperstackPos)
 		{
 			if(bROIsAlongZ && bROIsAlongT)
@@ -165,10 +173,12 @@ public class CurveMorph implements PlugIn
 				return false;
 			}
 		}
+		
 		//check if all ROIs have unique position
 		Set<Integer> uniquePositions = new HashSet<>();
 		int [][] indexedROIs = new int [nLineRois][2];
 		int nCount = 0;
+		
 		for(final Roi roi:candidateROIs)
 		{
 			//roi index
@@ -193,12 +203,14 @@ public class CurveMorph implements PlugIn
 			}
 			nCount++;
 		}
+		
 		//duplicate ROIs at the same slice/frame
 		if(uniquePositions.size() != nLineRois )
 		{
 			IJ.error( "CurveMorph error", "Each provided ROI must be at a different slice/frame." );
 			return false;
 		}
+		
 		//sort ROIs along the corresponding axis
 		Arrays.sort(indexedROIs, (a, b) -> Integer.compare(a[1], b[1]));
 		
@@ -224,8 +236,10 @@ public class CurveMorph implements PlugIn
 	{
 		new ImageJ();
 	
-		ImagePlus image = IJ.openImage("/home/eugene/Desktop/people/Varsha/20250131_bendingMT/Average_20240510.tif");
-
+		//ImagePlus image = IJ.openImage("/home/eugene/Desktop/people/Varsha/20250131_bendingMT/Average_20240510.tif");
+		//ImagePlus image = IJ.openImage("/home/eugene/Desktop/people/Varsha/20260506_more_examples/20260319_trimmed.tif");
+		ImagePlus image  = IJ.openVirtual( "/home/eugene/Desktop/projects/CurveMorph/example_neurons/250711_ci1_div3_SD.tif" );
+		
 		//ImagePlus image = IJ.openImage("/home/eugene/Desktop/people/Christophe/Untitled.tif");
 		//ImagePlus image = IJ.openImage("/home/eugene/Desktop/people/Christophe/ends/Untitled.tif");
 		//ImagePlus image = IJ.openImage("/home/eugene/Desktop/people/Christophe/ExM_MT.tif");
@@ -235,7 +249,9 @@ public class CurveMorph implements PlugIn
 			rMan = new RoiManager(); // creates a new one if needed
 		}
 
-		rMan.open( "/home/eugene/Desktop/people/Varsha/20250131_bendingMT/averRoiSet3.zip" );
+
+		//rMan.open( "/home/eugene/Desktop/people/Varsha/20260506_more_examples/20260319_trimmed.zip" );
+		rMan.open( "/home/eugene/Desktop/projects/CurveMorph/example_neurons/RoiSet.zip" );
 		//rMan.open( "/home/eugene/Desktop/people/Christophe/RoiSet3.zip" );
 		//rMan.open( "/home/eugene/Desktop/people/Christophe/RoiSet_MT.zip" );
 		// run the plugin

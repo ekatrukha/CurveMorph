@@ -2,6 +2,7 @@ package curvemorph;
 
 import java.util.ArrayList;
 
+import ij.IJ;
 import ij.gui.Overlay;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
@@ -19,11 +20,21 @@ public class CurveAssembly
 	
 	int nLastP;
 	
-	ArrayList<Integer> frameRefs;
+	/** ordered list of frame numbers **/
+	final ArrayList<Integer> frameRefs = new ArrayList<>();
+
+	/** ordered list of ROIS **/
+	final ArrayList<Roi> curveRefs = new ArrayList<>();
+
+	/** ordered list of interpolated ROIs **/
+	final public ArrayList<float [][]> resampledRefs = new ArrayList<>();
 	
-	ArrayList<Roi> curveRefs;
+	/** ordered list of interpolated ROIs' widths **/
+	final public ArrayList<Integer> resampledWidths = new ArrayList<>();
 	
-	double dMaxLength = -1;
+	public double dMaxLength = -1;
+	
+	public int nMaxWidth = -1;
 	
 	int nFinalSegmentsN = 0;
 	
@@ -34,19 +45,29 @@ public class CurveAssembly
 		this.cm = cm;
 		this.dial = dial;
 		image_overlay = new Overlay();
+		//makes an ordered list of frames (frameRefs) and ROIs (curveRefs) 
 		init();
 	}
 	
 	public void runAssembly()
 	{
+		//display progress
+		IJ.showStatus( "CurveMorph: morphing ROIs..." );
+		final int nTotFrames = frameRefs.get( frameRefs.size()-1 ) - frameRefs.get( 0 ) + 1;
+		int nCount = 0;
+		IJ.showProgress( nCount, nTotFrames);
 		
 		for(int nRoi = 0; nRoi < curveRefs.size() - 1; nRoi++)
 		{
-			//add first ROI in the segment
-			addRoi( curveRefs.get( nRoi ), frameRefs.get( nRoi ), curveRefs.get( nRoi ).getStrokeWidth()  );
 			
 			int nIniSegmFrame = frameRefs.get( nRoi );
 			int nLastSegmFrame = frameRefs.get( nRoi + 1 );
+			
+			if(nRoi == curveRefs.size() - 2)
+			{				
+				nLastSegmFrame = frameRefs.get( nRoi + 1 );
+			}
+			
 			double dSegmRange = nLastSegmFrame - nIniSegmFrame;
 			double t;
 			double fStrokeIni =  curveRefs.get( nRoi ).getStrokeWidth();
@@ -61,47 +82,70 @@ public class CurveAssembly
 
 			PolylineState start = new PolylineState(new CurveLerp( startI.resampleDouble( nFinalSegmentsN, nOrient[0] )));
 			PolylineState end   = new PolylineState(new CurveLerp(   endI.resampleDouble( nFinalSegmentsN, nOrient[1] )));
-			for(int nFrame = nIniSegmFrame + 1; nFrame < nLastSegmFrame; nFrame ++)
+			for(int nFrame = nIniSegmFrame; nFrame < nLastSegmFrame; nFrame ++)
 			{
 				t = (nFrame - nIniSegmFrame) / dSegmRange;
-				final double[][] xyMorph;
-				if(dial.nAlgorithm == 0)
-				{
-					xyMorph = CurveMorpher.getMorphState(start, end, t, bUseCentroid);
-				}
-				else
-				{
-					xyMorph = CurveMorpher.getInterpolatedState( start, end, t );
-				}
-				final CurveLerp morphLerp = new CurveLerp(xyMorph);
-				final int nSegm = (int) Math.ceil(morphLerp.dOrigLength);
-				final float [][] xyMorphResampled = morphLerp.resampleFloat( nSegm );
+
+				final float [][] xyMorphResampled = getIntermediate( start, end, t, bUseCentroid );								
 				final PolygonRoi resROI = new PolygonRoi(xyMorphResampled[0], xyMorphResampled[1], Roi.POLYLINE);
-				addRoi(resROI, nFrame, CurveMorpher.lerp( fStrokeIni, fStrokeLast, t ));
-				//addRoi(resROI, nFrame, 0);
+				final double dROIWidth = CurveMorpher.lerp( fStrokeIni, fStrokeLast, t ); 
+				addRoi(resROI, nFrame, dROIWidth);
+				nCount++;
+				if(dial.bMakeKymograph)
+				{
+					//current ROI
+					resampledRefs.add( xyMorphResampled );
+					int nKymoWidth = Math.max( 1, (int)Math.round( dROIWidth ) );
+					nMaxWidth = Math.max( nMaxWidth, nKymoWidth );
+					resampledWidths.add( nKymoWidth );
+				}
+				//the last point 
+				if((nRoi == (curveRefs.size() - 2)) && (nFrame == nLastSegmFrame - 1))
+				{
+					t = 1.0;
+					nCount++;
+					final float [][] xyMorphResampledLast = getIntermediate( start, end, t, bUseCentroid );								
+					final PolygonRoi resROILast = new PolygonRoi(xyMorphResampledLast[0], xyMorphResampledLast[1], Roi.POLYLINE);
+					addRoi(resROILast, nLastSegmFrame,  fStrokeLast);
+					if(dial.bMakeKymograph)
+					{
+						//current ROI
+						resampledRefs.add(xyMorphResampledLast);
+						int nKymoWidth = Math.max( 1, (int)Math.round( fStrokeLast ) );
+						nMaxWidth = Math.max( nMaxWidth, nKymoWidth );
+						resampledWidths.add( nKymoWidth );
+
+					}
+				}
+				IJ.showProgress( nCount, nTotFrames);
 			}
-		}
-		
-		//add last ROI
-		final Roi lastRoi = curveRefs.get( curveRefs.size() - 1 );
-		addRoi(lastRoi, frameRefs.get( frameRefs.size() - 1 ), lastRoi.getStrokeWidth());
-		
-		
+		}		
+		IJ.showStatus( "CurveMorph: morphing ROIs done." );
+		IJ.showProgress( 2, 2);
 		if(dial.bAddToOverlay)
 		{
 			cm.imp.setOverlay( image_overlay );
 			cm.imp.updateAndRepaintWindow();
 			cm.imp.show();
 		}
-//		morphRefs = new ArrayList<>();
-//		
-//		//resample everything
-//		for(int i = 0; i < curveRefs.size(); i++)
-//		{
-//			final CurveLerp temp = new CurveLerp(iniCurves.get( i ).resampleDouble( nFinalSegmentsN ));
-//			morphRefs.add( new PolylineState(temp) );
-//		}
 	}
+	
+	float [][] getIntermediate(final PolylineState start, final PolylineState end, double t, boolean bUseCentroid)
+	{
+		final double[][] xyMorph;
+		if(dial.nAlgorithm == 0)
+		{
+			xyMorph = CurveMorpher.getMorphState(start, end, t, bUseCentroid);
+		}
+		else
+		{
+			xyMorph = CurveMorpher.getInterpolatedState( start, end, t );
+		}
+		final CurveLerp morphLerp = new CurveLerp(xyMorph);
+		final int nSegm = (int) Math.ceil(morphLerp.dOrigLength);
+		return morphLerp.resampleFloat( nSegm );
+	}
+	
 	
 	void addRoi(final Roi roi, final int nFrame, final double dStrokeWidth)
 	{
@@ -204,9 +248,9 @@ public class CurveAssembly
 	/** make an ordered list of frames and ROIs **/
 	public void init()
 	{
-		frameRefs = new ArrayList<>();
-		curveRefs = new ArrayList<>();
+
 		boolean bAddLastROI = false;
+		
 		int nLastROIFrame = cm.refFrames[cm.refFrames.length - 1];
 		//let's assembly final timepoints
 		//range from ROIS
@@ -218,7 +262,6 @@ public class CurveAssembly
 		//range from image
 		else
 		{
-			curveRefs = new ArrayList<>();
 			nFirstP = 1;
 
 			if(cm.bHasHyperstackPos)
@@ -269,7 +312,7 @@ public class CurveAssembly
 			}
 			final CurveLerp cLerp = new CurveLerp(xy);
 			iniCurves.add( cLerp );
-			dMaxLength  = Math.max( dMaxLength, cLerp.dOrigLength );
+			dMaxLength  = Math.max( dMaxLength, cLerp.getLength() );
 		}
 		
 		nFinalSegmentsN = (int)Math.ceil( dMaxLength );

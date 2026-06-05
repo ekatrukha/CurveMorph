@@ -8,7 +8,7 @@ import ij.process.FloatPolygon;
 public class CurveLerp
 {
 	double [][] origXY;
-	double [] origL;
+	double [] origCumLength;
 	
 	int nOrigPoints = 0;
 	
@@ -60,25 +60,43 @@ public class CurveLerp
 	{
 		return origXY;
 	}
-	public double [] getLength()
+	
+	/** cumulative length **/
+	public double [] getCumLength()
 	{
-		return origL;
+		return origCumLength;
+	}
+	
+	public double getLength()
+	{
+		return dOrigLength;
 	}
 	
 	void setupOrigLength()
+	{		
+		origCumLength = calculateCumLength(origXY);
+		dOrigLength = origCumLength[ nOrigPoints - 1 ];
+		return;
+	}
+	
+	public static double [] calculateCumLength(final double[][] in)
 	{
 		double dLength = 0.0;
-		
-		origL = new double[nOrigPoints];
-		//origL[0] = 0.0;
-		
-		for(int i = 0; i < nOrigPoints - 1; i++)
+		final int nPoints = in[0].length;
+		final double[] cumLength = new double [nPoints];
+		for(int i = 0; i < nPoints - 1; i++)
 		{
-			dLength += distance( origXY[0][i+1], origXY[0][i], origXY[1][i+1], origXY[1][i]);
-			origL[i+1] = dLength;
+			dLength += distance( in[0][i+1], in[0][i], in[1][i+1], in[1][i]);
+			cumLength[ i + 1] = dLength;
 		}
-		dOrigLength = dLength;
-		return;
+		return cumLength;
+	}
+	
+	public static double calculateLength(final double[][] in)
+	{
+		final int nPoints = in[0].length;
+		
+		return calculateCumLength(in)[nPoints];
 	}
 	
 	public double[][] resampleDouble(int nSegments)
@@ -92,7 +110,7 @@ public class CurveLerp
 		}
 		for(int d = 0; d < 2; d++)
 		{
-			resampledXY[d] = LinearInterpolation.evalLinearInterp( origL, origXY[d], dResampleLength );
+			resampledXY[d] = LinearInterpolation.evalLinearInterp( origCumLength, origXY[d], dResampleLength );
 		}
 		return resampledXY;
 	}

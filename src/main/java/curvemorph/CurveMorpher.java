@@ -59,8 +59,7 @@ public class CurveMorpher
 					out[d][i] += targetCentroid[d] - currCent[d];
 				}
 		}
-		return out;
-		
+		return out;		
 	}
 	
 	public static float[][] getMorphStateFloat(PolylineState start, PolylineState end, double t, boolean bUseCentroid)

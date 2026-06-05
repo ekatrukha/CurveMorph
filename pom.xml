@@ -78,14 +78,29 @@
 		<package-name>CurveMorph</package-name>    
 		<license.licenseName>bsd_2</license.licenseName>
         <license.copyrightOwners>Cell Biology, Neurobiology and Biophysics Department of Utrecht University.</license.copyrightOwners>  			
-		<license.excludes>**/resources/**</license.excludes>
-		
+		<license.excludes>**/resources/**</license.excludes>		
 	</properties>
 
 	<dependencies>
+		<!-- ImgLib2 dependencies -->
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-ij</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>ij</artifactId>
 		</dependency>
 	</dependencies>
+	
+	<repositories>		
+		<repository>
+			<id>scijava.public</id>
+			<url>https://maven.scijava.org/content/groups/public</url>
+		</repository>
+	</repositories>
 </project>

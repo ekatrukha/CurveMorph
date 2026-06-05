@@ -12,8 +12,8 @@ public class PolylineState
     public PolylineState(final CurveLerp curveLerp)
     {
     	centroid = new double[2];
-    	double [] cumLength = curveLerp.getLength();
-    	lengths =  new double [curveLerp.getLength().length];
+    	double [] cumLength = curveLerp.getCumLength();
+    	lengths =  new double [curveLerp.getCumLength().length];
     	points = curveLerp.getXY();
     	//initial angle
     	double dx = points[0][1] - points[0][0];
