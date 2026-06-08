@@ -21,7 +21,6 @@ import net.imglib2.view.Views;
 
 import ij.IJ;
 import ij.ImagePlus;
-import ij.measure.Calibration;
 
 public class CMKymoBuilder < T extends RealType< T > & NativeType< T > >
 {
@@ -38,16 +37,14 @@ public class CMKymoBuilder < T extends RealType< T > & NativeType< T > >
 	final CMDialog cd;	
 	T type;
 	final String sTitle;
-	final Calibration cal;
-	final boolean isComposite;
+	final ImagePlus imp;
 	
 	@SuppressWarnings( "unchecked" )
 	public CMKymoBuilder (final CurveMorph_ cm, final CurveAssembly curveAssembly)
 	{
 		this.cd = cm.cmDialog;
+		imp = cm.imp;
 		sTitle = cm.imp.getTitle();
-		cal = cm.imp.getCalibration();
-		isComposite = cm.imp.isComposite();
 		nKymoMaxLength = (int) Math.ceil( curveAssembly.dMaxLength );
 		nKymoMaxWidth = curveAssembly.nMaxWidth;
 		bROIsAlongT = cm.bROIsAlongT;
@@ -190,29 +187,35 @@ public class CMKymoBuilder < T extends RealType< T > & NativeType< T > >
 		IJ.showStatus( "CurveMorph: building kymograph done." );
 		if(cd.bShowKymoStack)
 		{
-			final ImagePlus impKymoStack;
+			ImagePlus impKymoStack;
+			String sStackTitle = "KymoStack " + sTitle;
 			if(bROIsAlongT)
-				impKymoStack = ImageJFunctions.show( currStraightAll );	
+				impKymoStack = ImageJFunctions.wrap( currStraightAll, sStackTitle );	
 			else
-				impKymoStack = ImageJFunctions.show( Views.permute(currStraightAll, 3, 4) ); 			
+				impKymoStack = ImageJFunctions.wrap( Views.permute(currStraightAll, 3, 4), sStackTitle ); 			
 			impKymoStack.setTitle( "KymoStack " + sTitle );
-			impKymoStack.setCalibration( cal );
-			if(isComposite)
-				impKymoStack.setDisplayMode( IJ.COMPOSITE );
+			impKymoStack.setCalibration( imp.getCalibration());
+			if(imp.isComposite())
+				impKymoStack = TransferLUTs.transfer( imp, impKymoStack );
+			impKymoStack.show();
+
 		}
-		final ImagePlus impKymo;
+		ImagePlus impKymo;
+		final String sKymoTitle = cd.getPefix() + sTitle;
 		if(bROIsAlongT)
 		{
-			impKymo = ImageJFunctions.show( kymoImg );
+			impKymo = ImageJFunctions.wrap( kymoImg, sKymoTitle );
 		}
 		else
 		{
-			impKymo = ImageJFunctions.show( Views.permute( kymoImg, 3, 4 ));
+			impKymo = ImageJFunctions.wrap( Views.permute( kymoImg, 3, 4 ), sKymoTitle);
 		}
-		impKymo.setTitle( cd.getPefix() + sTitle  );
 		
-		if(isComposite)
-			impKymo.setDisplayMode( IJ.COMPOSITE );
+		if(imp.isComposite())
+		{
+			impKymo = TransferLUTs.transfer( imp, impKymo );
+		}
+		impKymo.show();
 		
 		return impKymo;
 	}
