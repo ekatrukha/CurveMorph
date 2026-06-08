@@ -35,6 +35,12 @@ public class CMDialog implements DialogListener
 	/** kymograph transverse type 0 - MAX proj, 1 - Average Proj **/
 	public int nKymoType = (int)Prefs.get( "CurveMorph.nKymoType", 0 );
 	
+	public final static int VALUE_AVG = 1;
+	
+	public int nSubtractType = (int)Prefs.get( "CurveMorph.nSubtractType", 0 );
+	
+	public final static int SUBTRACT_MIN = 1, SUBTRACT_AVG = 2, SUBTRACT_MEDIAN = 3;
+	
 	/** kymograph alignment type 0 - center, 1 - start, 2 - end **/
 	public int nKymoAlign = (int)Prefs.get( "CurveMorph.nKymoAlign", 0 );
 	
@@ -46,6 +52,7 @@ public class CMDialog implements DialogListener
 	Checkbox cUseCentriod;
 	Checkbox cMakeKymograph;
 	Choice chKymoType;
+	Choice chSubtractType;
 	Choice chKymoAlign;
 	Checkbox cShowStack;
 	
@@ -58,8 +65,8 @@ public class CMDialog implements DialogListener
 		final String [] sEndsMap = new String[] {"Closest", "Always first", "Always last"};
 		final String [] sRange = new String[] {"All image span", "Defined by ROIs"};
 		final String [] sKymoType = new String[] {"Maximum", "Average"};
+		final String[] sSubtractType = new String[] {"Nothing", "Minimum", "Average", "Median"};
 		final String [] sKymoAlign = new String[] {"Center", "Start point", "End point"};
-		
 		int nChoiceN = 0;
 		int nCheckboxN = 0;
 		gdParams.addChoice( "Algorithm", sAlgorithm,  null);
@@ -95,6 +102,11 @@ public class CMDialog implements DialogListener
 		nChoiceN++;
 		chKymoType.select( nKymoType );
 		
+		gdParams.addChoice( "Subtract", sSubtractType,  null);
+		chSubtractType = ((Choice)gdParams.getChoices().get( nChoiceN ));
+		nChoiceN++;
+		chSubtractType.select( nSubtractType );
+		
 		gdParams.addChoice( "Kymo align", sKymoAlign,  null);		
 		chKymoAlign = ((Choice)gdParams.getChoices().get( nChoiceN ));
 		nChoiceN++;
@@ -128,16 +140,20 @@ public class CMDialog implements DialogListener
 
 		if(cMakeKymograph.getState())
 		{
-			chKymoType.setEnabled( true );
-			chKymoAlign.setEnabled( true );
-			cShowStack.setEnabled( true );
+			toggleKymoOptions( true );
 		}
 		else
 		{
-			chKymoType.setEnabled( false );
-			chKymoAlign.setEnabled( false );
-			cShowStack.setEnabled( false );
+			toggleKymoOptions( false );
 		}
+	}
+	
+	void toggleKymoOptions(final boolean bEnabled)
+	{
+		chKymoType.setEnabled( bEnabled );
+		chKymoAlign.setEnabled( bEnabled );
+		cShowStack.setEnabled( bEnabled );
+		chSubtractType.setEnabled( bEnabled );
 	}
 	
 	@Override
@@ -181,11 +197,44 @@ public class CMDialog implements DialogListener
 		{
 			nKymoType = gdParams.getNextChoiceIndex();
 			Prefs.set( "CurveMorph.nKymoType", (double) nKymoType );
+			
+			nSubtractType = gdParams.getNextChoiceIndex();
+			Prefs.set( "CurveMorph.nSubtractType", (double) nSubtractType );
+			
 			nKymoAlign = gdParams.getNextChoiceIndex();
 			Prefs.set( "CurveMorph.nKymoAlign", (double) nKymoAlign );
+			
 			bShowKymoStack = gdParams.getNextBoolean();
 			Prefs.set( "CurveMorph.bShowKymoStack", bShowKymoStack );
+			
 		}
+	}
+	
+	public String getPefix()
+	{
+		String out = "Reslice ";
+		if(nKymoType == VALUE_AVG)
+			out = out  + "(AVRG";
+		else
+			out = out  + "(MAX";
+		
+		switch (nSubtractType)
+		{
+		case SUBTRACT_MIN:
+			out = out + " - MIN)";
+			break;
+		case SUBTRACT_AVG:
+			out = out + " - AVRG)";
+			break;
+		case SUBTRACT_MEDIAN:
+			out = out + " - MEDIAN)";
+			break;
+		default:
+			out = out + ")";
+			break;
+		}
+		out = out + " of ";
+		return out;
 	}
 	
 }

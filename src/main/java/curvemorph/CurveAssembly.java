@@ -10,7 +10,7 @@ import ij.process.FloatPolygon;
 
 public class CurveAssembly
 {
-	final CurveMorph cm;
+	final CurveMorph_ cm;
 	
 	final CMDialog dial;
 	
@@ -40,7 +40,7 @@ public class CurveAssembly
 	
 	final Overlay image_overlay;
 	
-	public CurveAssembly(final CurveMorph cm, final CMDialog dial)
+	public CurveAssembly(final CurveMorph_ cm, final CMDialog dial)
 	{
 		this.cm = cm;
 		this.dial = dial;
@@ -165,10 +165,12 @@ public class CurveAssembly
 		{
 			roi.setPosition( nFrame );
 		}
+		
 		if(dial.bAddToOverlay)
 		{
 			image_overlay.add( roi );
 		}
+		
 		if(dial.bAddToManager)
 		{
 			roi.setName( "interp" + Integer.toString( nFrame ) );

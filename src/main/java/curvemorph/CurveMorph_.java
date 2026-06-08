@@ -16,7 +16,7 @@ import ij.plugin.PlugIn;
 import ij.plugin.frame.RoiManager;
 import ij.process.FloatPolygon;
 
-public class CurveMorph implements PlugIn 
+public class CurveMorph_ implements PlugIn 
 {
 	/** current version **/
 	String sVersion = "0.0.2";
@@ -51,7 +51,7 @@ public class CurveMorph implements PlugIn
 	@Override
 	public void run( String arg )
 	{
-		IJ.register( CurveMorph.class );
+		IJ.register( CurveMorph_.class );
 		//check the inputs
 		if(!verifyInitialInput())
 			return;
@@ -91,6 +91,14 @@ public class CurveMorph implements PlugIn
 			IJ.noImage();
 			return false;
 		}
+		
+		if( imp.getBitDepth() == 24)
+		{
+			IJ.error( "CurveMorph plugin does not support RGB images.\n"
+					+ "But you can switch to 3 separate color channel processing via Image -> Color -> Make Composite.");
+			return false;
+		}
+		
 		// check if it is stack or timelapse
 		dims = imp.getDimensions();
 		if( dims[3] == 1 && dims[4] == 1)
@@ -249,13 +257,12 @@ public class CurveMorph implements PlugIn
 			rMan = new RoiManager(); // creates a new one if needed
 		}
 
-
 		//rMan.open( "/home/eugene/Desktop/people/Varsha/20260506_more_examples/20260319_trimmed.zip" );
 		rMan.open( "/home/eugene/Desktop/projects/CurveMorph/example_neurons/RoiSet.zip" );
 		//rMan.open( "/home/eugene/Desktop/people/Christophe/RoiSet3.zip" );
 		//rMan.open( "/home/eugene/Desktop/people/Christophe/RoiSet_MT.zip" );
 		// run the plugin
-		IJ.runPlugIn(CurveMorph.class.getName(), "");
+		IJ.runPlugIn(CurveMorph_.class.getName(), "");
 
 		//manualTest();
 

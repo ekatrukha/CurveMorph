@@ -1,6 +1,7 @@
 package curvemorph;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessible;
@@ -16,11 +17,11 @@ import net.imglib2.interpolation.InterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.ClampingNLinearInterpolatorFactory;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
 import ij.IJ;
 import ij.ImagePlus;
+import ij.measure.Calibration;
 
 public class CMKymoBuilder < T extends RealType< T > & NativeType< T > >
 {
@@ -37,12 +38,16 @@ public class CMKymoBuilder < T extends RealType< T > & NativeType< T > >
 	final CMDialog cd;	
 	T type;
 	final String sTitle;
+	final Calibration cal;
+	final boolean isComposite;
 	
 	@SuppressWarnings( "unchecked" )
-	public CMKymoBuilder (final CurveMorph cm, final CurveAssembly curveAssembly)
+	public CMKymoBuilder (final CurveMorph_ cm, final CurveAssembly curveAssembly)
 	{
 		this.cd = cm.cmDialog;
 		sTitle = cm.imp.getTitle();
+		cal = cm.imp.getCalibration();
+		isComposite = cm.imp.isComposite();
 		nKymoMaxLength = (int) Math.ceil( curveAssembly.dMaxLength );
 		nKymoMaxWidth = curveAssembly.nMaxWidth;
 		bROIsAlongT = cm.bROIsAlongT;
@@ -69,85 +74,147 @@ public class CMKymoBuilder < T extends RealType< T > & NativeType< T > >
 
 	}
 	
+	@SuppressWarnings( "null" )
 	public ImagePlus getKymograph()
 	{
 		//make an output
 		ImgFactory<T> factory = new ArrayImgFactory<>(type);
 		long [] dimsIn = RAI.dimensionsAsLongArray();
 		long [] dimsStack = new long [5];
+		long [] dimsKymo = new long [5];
+		//kymo dimensions
+		dimsKymo[0] = nKymoMaxLength;
+		dimsKymo[1] = dimsIn[4];
+		dimsKymo[4] = 1;
+		for(int d = 2; d < 4; d++)
+		{
+			dimsKymo[d] = dimsIn[d];
+		}
+		
+		//kymo stack dimensions
+		dimsStack[0] = nKymoMaxLength;
+		dimsStack[1] = nKymoMaxWidth;
 		for(int d = 2; d < 5; d++)
 		{
 			dimsStack[d] = dimsIn[d];
 		}
-		dimsStack[0] = nKymoMaxLength;
-		dimsStack[1] = nKymoMaxWidth;
-
 		//make interpolation factory
 		final InterpolatorFactory<T, RandomAccessible< T >> interpFactory = new ClampingNLinearInterpolatorFactory<>();
-	
-		final Img< T > currStraightAll = factory.create(dimsStack);
+
+		//kymo output 
+		final Img< T > kymoImg = factory.create(dimsKymo);
+		//kymo stack output 
+		
+		final Img< T > currStraightAll ;
+		if(cd.bShowKymoStack)
+			currStraightAll = factory.create(dimsStack);
+		else
+			currStraightAll = factory.create( 1 );
 		
 		IJ.showStatus( "CurveMorph: building kymograph..." );
 		IJ.showProgress( 0, 0 );
 		//kymo dimension (always last)
 		for(long dK = 0; dK < dimsIn[4]; dK++ )
-		{
-			final IntervalView< T > rai1 = Views.hyperSlice( RAI, 4, dK );
+		{		
 			final int nLength = length.get( (int) dK );
 			final int nWidth = width.get( (int)dK );
 			final ReMap map = coordsSample.get( (int)dK );
 			IJ.showProgress((int) dK, (int)(dimsIn[4] - 1) );
 			
-			final IntervalView< T > currStraight1 = Views.hyperSlice( currStraightAll, 4, dK );
 			final int [] newXY = new int[2];
+			final int [] kymoXY = new int[2];
+			kymoXY[1] = (int)dK;
+
 			for(long dZT = 0; dZT < dimsIn[3]; dZT++ )
 			{
-				final IntervalView< T > rai2 = Views.hyperSlice( rai1, 3, dZT );
-				final IntervalView< T > currStraight2 = Views.hyperSlice( currStraight1, 3, dZT );
 				for(long dC = 0; dC < dimsIn[2]; dC++ )
 				{
-					final IntervalView< T > raiXY = Views.hyperSlice( rai2, 2, dC );
-					final IntervalView< T > currStraight = Views.hyperSlice( currStraight2, 2, dC );
+					final RandomAccessibleInterval< T > raiXY = getMultiHyperslice( RAI, (int)dK, (int)dZT, (int)dC );
 					
-					//IntervalView< T > raiOutXY = Views.hyperSlice( raiOut1, 3, dC );
 					RealRandomAccessible< T > interpolate = Views.interpolate( Views.extendZero( raiXY ), interpFactory);
 					RealRandomAccess<T> ra = interpolate.realRandomAccess();
-					RandomAccess< T > raStr = currStraight.randomAccess();
+
+					final RandomAccessibleInterval< T > kymoRai = getMultiHyperslice( kymoImg, 0, (int)dZT, (int)dC );
+					RandomAccess< T > raKymo = kymoRai.randomAccess();
 					int nShiftX = 0;
 					int nShiftY = 0;
+					
 					if(cd.nKymoAlign == 0)
 					{
-						nShiftX = (int) Math.floor( 0.5*(nKymoMaxLength - nLength));
-						nShiftY = (int) Math.floor( 0.5*(nKymoMaxWidth - nWidth));
+						nShiftX = (int) Math.floor( 0.5 * (nKymoMaxLength - nLength));
+						nShiftY = (int) Math.floor( 0.5 * (nKymoMaxWidth - nWidth));
 					}
 					if(cd.nKymoAlign == 2)
 					{
 						nShiftX = nKymoMaxLength - nLength;
 						nShiftY = nKymoMaxWidth - nWidth;
 					}
+					
+					RandomAccessibleInterval< T > currStraight = null;
+					RandomAccess< T > raStr = null;
+
+					if(cd.bShowKymoStack)
+					{
+						currStraight = getMultiHyperslice( currStraightAll, (int)dK, (int)dZT, (int)dC );
+						raStr = currStraight.randomAccess();						
+					}
+					//taking the array of straightened
+					float [][] strArray = new float [nLength][nWidth];
 					for(int x = 0; x < nLength; x++)
 					{
 						for(int y = 0; y < nWidth; y++)
 						{
 							final int ind = x + y * nLength;
-							newXY[0] = x + nShiftX;
-							newXY[1] = y + nShiftY;
-							raStr.setPosition( newXY );
-							ra.setPosition( map.oldCoords[ind] );
-							raStr.get().set( ra.get() );
+							ra.setPosition( map.mapCoords[ind] );
+							strArray[x][y] = ra.get().getPowerFloat();
+							if(cd.bShowKymoStack)
+							{
+								newXY[0] = x + nShiftX;
+								newXY[1] = y + nShiftY;
+								raStr.setPosition( newXY );
+								raStr.get().set( ra.get() );
+							}
 						}
 					}
-				
+					//let's calculate the line
+					float [] line = processWideLine(strArray);
+					for(int x = 0; x < nLength; x++)
+					{
+						kymoXY[0] = x + nShiftX;	
+						raKymo.setPosition( kymoXY );
+						raKymo.get().setReal( line[x] );
+					}
 				}
 			}
 		}
 		IJ.showStatus( "CurveMorph: building kymograph done." );
 		if(cd.bShowKymoStack)
 		{
-			ImagePlus impKymoStack = ImageJFunctions.show( currStraightAll );
+			final ImagePlus impKymoStack;
+			if(bROIsAlongT)
+				impKymoStack = ImageJFunctions.show( currStraightAll );	
+			else
+				impKymoStack = ImageJFunctions.show( Views.permute(currStraightAll, 3, 4) ); 			
 			impKymoStack.setTitle( "KymoStack " + sTitle );
+			impKymoStack.setCalibration( cal );
+			if(isComposite)
+				impKymoStack.setDisplayMode( IJ.COMPOSITE );
 		}
-		return null;
+		final ImagePlus impKymo;
+		if(bROIsAlongT)
+		{
+			impKymo = ImageJFunctions.show( kymoImg );
+		}
+		else
+		{
+			impKymo = ImageJFunctions.show( Views.permute( kymoImg, 3, 4 ));
+		}
+		impKymo.setTitle( cd.getPefix() + sTitle  );
+		
+		if(isComposite)
+			impKymo.setDisplayMode( IJ.COMPOSITE );
+		
+		return impKymo;
 	}
 	
 	ArrayList<ReMap> prepareSamplingCoordinates(final ArrayList<float[][]> input)
@@ -197,13 +264,86 @@ public class CMKymoBuilder < T extends RealType< T > & NativeType< T > >
 					final int ind = x + y * nLength;
 					for(int d = 0; d < 2; d++ )
 					{
-						map.oldCoords[ind][d] = center[d] + normale[d]*(y - nShift);
+						map.mapCoords[ind][d] = center[d] + normale[d]*(y - nShift);
 					}
 				}
 			}
 			coords.add( map );			
 		}
 		return coords;		
+	}
+	
+	float [] processWideLine(final float [][] lineprof2D)
+	{
+		final int nLength = lineprof2D.length;
+		final int nWidth = lineprof2D[0].length;
+		final float[] values_out = new float[nLength];
+		float fMin;
+		float fMax;
+		float fMedian = 0.0f;
+		float fMean;
+		float fCount;
+		float curVal;
+		for(int k = 0; k < nLength; k++)
+		{
+			fCount = 0;
+			fMin = Float.MAX_VALUE;
+			fMax = (-1) * Float.MAX_VALUE;
+			fMean = 0;
+			for(int j = 0; j < nWidth; j++)
+			{
+				curVal = lineprof2D[ k ][ j ];			 
+				if( Float.isNaN( curVal ))
+				{
+					continue;
+				}
+				fMean += curVal;
+				fCount ++;
+				fMax = Math.max (curVal, fMax);
+				fMin = Math.min (curVal, fMin);
+			}
+			fMean /= fCount;
+			if(cd.nSubtractType == CMDialog.SUBTRACT_MEDIAN)
+			{
+				final float [] singleLine = new float[nWidth];
+				for(int j = 0; j < nWidth; j++)
+				{
+					singleLine[j] = lineprof2D[k][j];
+				}
+				Arrays.sort( singleLine );
+				if (nWidth % 2 == 0)
+					fMedian = (singleLine[nWidth/2] + singleLine[nWidth/2 - 1])*0.5f;
+				else
+					fMedian = singleLine[nWidth/2];
+			}
+
+			//VALUE
+			if(cd.nKymoType == CMDialog.VALUE_AVG)
+				curVal = fMean;
+			else
+				curVal = fMax;
+
+			//SUBTRACT
+			switch (cd.nSubtractType)
+			{
+			case CMDialog.SUBTRACT_MIN:
+				curVal -= fMin;
+				break;
+			case CMDialog.SUBTRACT_AVG:
+				curVal -= fMean;
+				break;
+			case CMDialog.SUBTRACT_MEDIAN:
+				curVal -= fMedian;
+				break;
+			default:
+				break;
+			}
+			//finally
+			values_out[ k ] = curVal;
+
+		}
+
+		return values_out;
 	}
 	
 	public double[][] smoothThreePoints (final float[][] in)
@@ -226,6 +366,19 @@ public class CMKymoBuilder < T extends RealType< T > & NativeType< T > >
 			}
 		}
 		return smooth;
+	}
+	
+	RandomAccessibleInterval< T > getMultiHyperslice(RandomAccessibleInterval<T> rai, int... slicePos)
+	{
+		if(slicePos.length == 0 )
+			return rai;
+		final int dims = rai.numDimensions();
+		RandomAccessibleInterval< T >  out = rai;
+		for(int i = 0; i < slicePos.length; i++)
+		{
+			out = Views.hyperSlice( out, dims - 1 - i, slicePos[i] );
+		}
+		return out;
 	}
 	
 	public static RandomAccessibleInterval<?> wrapImagePlusToRAIXYCTZ(final ImagePlus imp)
@@ -256,8 +409,6 @@ public class CMKymoBuilder < T extends RealType< T > & NativeType< T > >
 		}
 		
 		return Views.permute( outRAI, 2, 4 );
-		
-		//return outRAI;
 	}
 	
 	public static String getImageJAxesOrder( final ImagePlus ip )
