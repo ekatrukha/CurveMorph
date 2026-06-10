@@ -24,26 +24,27 @@ with kinesins running along it.
 <picture>
 	<source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ekatrukha/CurveMorph/main/logo/example/example.gif">
 	<img alt="example movie" src="https://raw.githubusercontent.com/ekatrukha/CurveMorph/main/logo/example/example_white.gif">
-</picture>   
+</picture>     
+ 
 You can provide a reference ROIs at different time points of the movie,   
 shown here (6 ROIs for 100 frames).   
 <picture>
 	<source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ekatrukha/CurveMorph/main/logo/example/example_result_ROIsinput.gif">
 	<img alt="example movie with reference ROIs" src="https://raw.githubusercontent.com/ekatrukha/CurveMorph/main/logo/example/example_result_ROIsinput_white.gif">
 </picture> 
-
+  
 The plugin will morph (or interpolate) ROI shapes at all intermediate frames:   
 <picture>
 	<source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ekatrukha/CurveMorph/main/logo/example/example_result_ROIsinterp.gif">
 	<img alt="example movie with interpolated ROIs" src="https://raw.githubusercontent.com/ekatrukha/CurveMorph/main/logo/example/example_result_ROIsinterp_white.gif">
 </picture>    
-
+  
 And create a kymograph along them:   
 <picture>
 	<source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ekatrukha/CurveMorph/main/logo/example/kymo.png">
 	<img alt="kymograph" src="https://raw.githubusercontent.com/ekatrukha/CurveMorph/main/logo/example/kymo_white.png">
 </picture>    
-
+  
 Optionally, it will output a straightened "kymograph stack":   
 <picture>
 	<source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ekatrukha/CurveMorph/main/logo/example/KymoStack_example.gif">
