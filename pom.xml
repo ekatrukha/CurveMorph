@@ -14,8 +14,8 @@
 	<version>0.0.3-SNAPSHOT</version>
 
 	<name>CurveMorph</name>                                                   
-	<description>ImageJ plugin to morph curve ROIs.</description> 
-	<url>https://github.com/ekatrukha/CurveMorph</url>                       
+	<description>FIJI plugin to morph curve ROIs and build kymographs.</description> 
+	<url>https://github.com/UU-cellbiology/CurveMorph</url>                       
 	<inceptionYear>2026</inceptionYear>                                           
 	<organization>
 		<name>Cell Biology, Neurobiology and Biophysics Department of Utrecht University</name>
@@ -60,18 +60,18 @@
 	</mailingLists>
 
     <scm>
-        <connection>scm:git:git://github.com/ekatrukha/CurveMorph</connection>
-        <developerConnection>scm:git:git@github.com:ekatrukha/CurveMorph</developerConnection>
-        <tag>CurveMorph-0.0.1</tag>
-        <url>https://github.com/ekatrukha/CurveMorph</url>
+        <connection>scm:git:git://github.com/UU-cellbiology/CurveMorph</connection>
+        <developerConnection>scm:git:git@github.com:UU-cellbiology/CurveMorph</developerConnection>
+        <tag>CurveMorph-0.0.3</tag>
+        <url>https://github.com/UU-cellbiology/CurveMorph</url>
     </scm>
     <issueManagement>
         <system>GitHub</system>
-        <url>http://github.com/ekatrukha/CurveMorph/issues</url>
+        <url>http://github.com/UU-cellbiology/CurveMorph/issues</url>
     </issueManagement>
     <ciManagement>
 		<system>GitHub Actions</system>
-		<url>https://github.com/ekatrukha/CurveMorph/actions</url>
+		<url>https://github.com/UU-cellbiology/CurveMorph/actions</url>
     </ciManagement>
 
 	<properties>
