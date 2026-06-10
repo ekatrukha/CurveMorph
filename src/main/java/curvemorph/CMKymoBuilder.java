@@ -33,6 +33,9 @@ public class CMKymoBuilder < T extends RealType< T > & NativeType< T > >
 	
 	final public ArrayList<Integer> width;
 	final public ArrayList<Integer> length;
+	final int nFirstP; 
+	final int nLastP;
+	final int nSpan;
 	boolean bROIsAlongT;
 	final CMDialog cd;	
 	T type;
@@ -47,6 +50,9 @@ public class CMKymoBuilder < T extends RealType< T > & NativeType< T > >
 		sTitle = cm.imp.getTitle();
 		nKymoMaxLength = (int) Math.ceil( curveAssembly.dMaxLength );
 		nKymoMaxWidth = curveAssembly.nMaxWidth;
+		nFirstP = curveAssembly.nFirstP;
+		nLastP = curveAssembly.nLastP;
+		nSpan = nLastP - nFirstP + 1;
 		bROIsAlongT = cm.bROIsAlongT;
 		if(!cm.bHasHyperstackPos)
 		{
@@ -81,7 +87,8 @@ public class CMKymoBuilder < T extends RealType< T > & NativeType< T > >
 		long [] dimsKymo = new long [5];
 		//kymo dimensions
 		dimsKymo[0] = nKymoMaxLength;
-		dimsKymo[1] = dimsIn[4];
+		dimsKymo[1] = nSpan;
+		//dimsKymo[1] = dimsIn[4];
 		dimsKymo[4] = 1;
 		for(int d = 2; d < 4; d++)
 		{
@@ -91,10 +98,11 @@ public class CMKymoBuilder < T extends RealType< T > & NativeType< T > >
 		//kymo stack dimensions
 		dimsStack[0] = nKymoMaxLength;
 		dimsStack[1] = nKymoMaxWidth;
-		for(int d = 2; d < 5; d++)
+		for(int d = 2; d < 4; d++)
 		{
 			dimsStack[d] = dimsIn[d];
 		}
+		dimsStack[4] = nSpan;
 		//make interpolation factory
 		final InterpolatorFactory<T, RandomAccessible< T >> interpFactory = new ClampingNLinearInterpolatorFactory<>();
 
@@ -111,16 +119,17 @@ public class CMKymoBuilder < T extends RealType< T > & NativeType< T > >
 		IJ.showStatus( "CurveMorph: building kymograph..." );
 		IJ.showProgress( 0, 0 );
 		//kymo dimension (always last)
-		for(long dK = 0; dK < dimsIn[4]; dK++ )
+		int nPos = 0;
+		for(long dK = nFirstP - 1; dK < nLastP; dK++ )
 		{		
-			final int nLength = length.get( (int) dK );
-			final int nWidth = width.get( (int)dK );
-			final ReMap map = coordsSample.get( (int)dK );
-			IJ.showProgress((int) dK, (int)(dimsIn[4] - 1) );
+			final int nLength = length.get( nPos );
+			final int nWidth = width.get( nPos );
+			final ReMap map = coordsSample.get( nPos );
+			IJ.showProgress(nPos, nSpan );
 			
 			final int [] newXY = new int[2];
 			final int [] kymoXY = new int[2];
-			kymoXY[1] = (int)dK;
+			kymoXY[1] = nPos;
 
 			for(long dZT = 0; dZT < dimsIn[3]; dZT++ )
 			{
@@ -152,7 +161,7 @@ public class CMKymoBuilder < T extends RealType< T > & NativeType< T > >
 
 					if(cd.bShowKymoStack)
 					{
-						currStraight = getMultiHyperslice( currStraightAll, (int)dK, (int)dZT, (int)dC );
+						currStraight = getMultiHyperslice( currStraightAll, nPos, (int)dZT, (int)dC );
 						raStr = currStraight.randomAccess();						
 					}
 					//taking the array of straightened
@@ -183,6 +192,7 @@ public class CMKymoBuilder < T extends RealType< T > & NativeType< T > >
 					}
 				}
 			}
+			nPos++;
 		}
 		IJ.showStatus( "CurveMorph: building kymograph done." );
 		if(cd.bShowKymoStack)

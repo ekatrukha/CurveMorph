@@ -16,9 +16,9 @@ public class CurveAssembly
 	
 	public static final int EndsMap_Closest = 0, EndsMap_First = 1, EndsMap_End = 2; 
 	
-	int nFirstP; 
+	public int nFirstP; 
 	
-	int nLastP;
+	public int nLastP;
 	
 	/** ordered list of frame numbers **/
 	final ArrayList<Integer> frameRefs = new ArrayList<>();
@@ -150,6 +150,7 @@ public class CurveAssembly
 	void addRoi(final Roi roi, final int nFrame, final double dStrokeWidth)
 	{
 		roi.setStrokeWidth( dStrokeWidth );
+		roi.setStrokeColor( cm.strokeColor );
 		if(cm.bHasHyperstackPos)
 		{
 			if(cm.bROIsAlongZ)

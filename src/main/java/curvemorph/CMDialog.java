@@ -79,7 +79,7 @@ public class CMDialog implements DialogListener
 		nChoiceN++;
 		chEndsMap.select( nEndsMap );
 		
-		gdParams.addCheckbox( "Use centriod", bUseCentriod );
+		gdParams.addCheckbox( "Use centroid", bUseCentriod );
 		cUseCentriod = ( Checkbox ) gdParams.getCheckboxes().get( nCheckboxN  );
 		nCheckboxN ++;
 		
