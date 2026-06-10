@@ -1,7 +1,16 @@
-# CurveMorph
-ImageJ/Fiji plugin to morph 2D curve/line ROIs.
+<picture>
+	<source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ekatrukha/CurveMorph/main/logo/logo_black.gif">
+	<img align="right" style="padding:10px" alt="BVB logo" src="https://raw.githubusercontent.com/ekatrukha/CurveMorph/main/logo/logo_white.gif">
+</picture>
 
-Documentation WIP, will be available at [wiki](https://github.com/ekatrukha/CurveMorph/wiki).
+[Fiji](https://fiji.sc/) plugin to morph (or interpolate) 2D curve/line ROIs   
+and build kymographs along them.   
+
+Full documentation is available at [wiki](https://github.com/ekatrukha/CurveMorph/wiki).   
+In short, see:   
+* How to install
+* How to use
+* How to cite
 
 ----------
 

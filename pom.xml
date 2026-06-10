@@ -11,7 +11,7 @@
 
 	<groupId>nl.uu.science.cellbiology</groupId>       
 	<artifactId>CurveMorph</artifactId> 
-	<version>0.0.2</version>
+	<version>0.0.3-SNAPSHOT</version>
 
 	<name>CurveMorph</name>                                                   
 	<description>ImageJ plugin to morph curve ROIs.</description> 
