@@ -214,9 +214,10 @@ public class CurveAssembly
 			nOrientation[0] = 0;
 
 		}
-		dCurrDistance = CurveLerp.distance( start.origXY[0][0], end.origXY[0][nEndLast], 
-											start.origXY[1][0], end.origXY[1][nEndLast]);
+		
 		//begin - end
+		dCurrDistance = CurveLerp.distance( start.origXY[0][0], end.origXY[0][nEndLast], 
+											start.origXY[1][0], end.origXY[1][nEndLast]);	
 		if(dCurrDistance < dDistance)
 		{
 			dDistance = dCurrDistance;
@@ -224,9 +225,9 @@ public class CurveAssembly
 			nOrientation[1] = 1;
 		}
 		
+		//end - begin		
 		dCurrDistance = CurveLerp.distance( start.origXY[0][nStartLast], end.origXY[0][0], 
 											start.origXY[1][nStartLast], end.origXY[1][0]);
-		//end - begin
 		if(dCurrDistance < dDistance)
 		{
 			dDistance = dCurrDistance;
@@ -234,9 +235,9 @@ public class CurveAssembly
 			nOrientation[1] = 0;
 		}
 		
+		//end - begin
 		dCurrDistance = CurveLerp.distance( start.origXY[0][nStartLast], end.origXY[0][nEndLast], 
 											start.origXY[1][nStartLast], end.origXY[1][nEndLast]);
-		//end - begin
 		if(dCurrDistance < dDistance)
 		{
 			dDistance = dCurrDistance;

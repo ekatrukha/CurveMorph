@@ -29,8 +29,8 @@ with kinesins running along it.
 You can provide a reference ROIs at different time points of the movie,   
 shown here (6 ROIs for 100 frames).   
 <picture>
-	<source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/UU-cellbiology/CurveMorph/main/logo/example/example_result_ROIsinput.gif">
-	<img alt="example movie with reference ROIs" src="https://raw.githubusercontent.com/UU-cellbiology/CurveMorph/main/logo/example/example_result_ROIsinput_white.gif">
+	<source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/UU-cellbiology/CurveMorph/main/logo/example/example_result_ROIsinput_extended.gif">
+	<img alt="example movie with reference ROIs" src="https://raw.githubusercontent.com/UU-cellbiology/CurveMorph/main/logo/example/example_result_ROIsinput_extended_white.gif">
 </picture> 
   
 The plugin will morph (or interpolate) ROI shapes at all intermediate frames:   
@@ -50,12 +50,14 @@ Optionally, it will output a straightened "kymograph stack":
 	<source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/UU-cellbiology/CurveMorph/main/logo/example/KymoStack_example.gif">
 	<img alt="kymograph stack output" src="https://raw.githubusercontent.com/UU-cellbiology/CurveMorph/main/logo/example/KymoStack_example_white.gif">
 </picture>    
+    
+   
+Not happy about it? Something is missing?  
+You can check [plugins/software solutions](https://github.com/UU-cellbiology/CurveMorph/wiki/Similar-plugins) with similar functionality.   
 
-### Similar plugins
+**Acknowledgement**
 
-* [Dynamic kymograph](https://github.com/rudyzhou/Dynamic_Kymograph), uses only PolyLine ROIs and XY interpolation + fixed number of ROI nodes.
-* [Trackmate kymograph](https://imagej.net/plugins/trackmate/extensions/trackmate-kymograph), kymograph along the straight line defined by two tracks.
-
+Thanks to Christophe [@cleterrier](https://github.com/cleterrier) and Louis Romette for thorough testing.  
 
 ----------
 
