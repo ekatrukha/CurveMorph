@@ -1,4 +1,4 @@
-<a href="https://doi.org/10.5281/zenodo.20665373"><img src="https://zenodo.org/badge/1228985452.svg" alt="DOI"></a>
+<a href="https://doi.org/10.5281/zenodo.20665373"><img src="https://raw.githubusercontent.com/UU-cellbiology/CurveMorph/main/logo/zenodo.20665374.svg" alt="DOI"></a>
 <picture>
 	<source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/UU-cellbiology/CurveMorph/main/logo/logo_black.gif">
 	<img align="right" style="padding:10px" alt="BVB logo" src="https://raw.githubusercontent.com/UU-cellbiology/CurveMorph/main/logo/logo_white.gif">
